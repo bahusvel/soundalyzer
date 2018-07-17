@@ -1,0 +1,25 @@
+[package]
+name = "soundalyzer"
+version = "0.1.0"
+authors = ["Denis Lavrov <bahus.vel@gmail.com>"]
+
+[lib]
+name = "soundalyzer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "linealyzer"
+path = "src/linealyzer/main.rs"
+
+[dependencies]
+portaudio = "0.7.0"
+phf = "0.7.22"
+phf_macros = "0.7.22"
+lazy_static = "1.0.2"
+synth = "0.11.0"
+pitch_calc = "0.11.1"
+sample = "0.10.0"
+
+[dependencies.midir]
+version = "0.5.0"
+# features = ["jack"]
