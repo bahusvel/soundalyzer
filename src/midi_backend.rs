@@ -44,8 +44,15 @@ impl Drop for MIDIBackend {
     fn drop(&mut self) {
         let mut lock = self.state.lock().unwrap();
         lock.running = false;
-        drop(lock);
-        sleep(Duration::from_millis(MAX_DURATION as u64));
+        for i in 0..127 {
+            let _ = lock.conn.as_mut().unwrap().send(
+                &[
+                    NOTE_OFF_MSG,
+                    i as u8,
+                    VELOCITY,
+                ],
+            );
+        }
     }
 }
 
