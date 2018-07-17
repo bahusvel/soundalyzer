@@ -15,12 +15,12 @@ use super::Backend;
 const NOTE_ON_MSG: u8 = 0x90;
 const NOTE_OFF_MSG: u8 = 0x80;
 const VELOCITY: u8 = 127;
-const NOTE_DURATION: u32 = 50;
-const MAX_DURATION: u32 = NOTE_DURATION as u32 * 3;
+const NOTE_DURATION: i32 = 50;
+const MAX_DURATION: i32 = NOTE_DURATION * 3;
 const EPOCH_DURATION: u64 = (NOTE_DURATION / 2) as u64;
 
 struct BackendState {
-    notes: [u32; 127],
+    notes: [i32; 127],
     conn: Option<midir::MidiOutputConnection>,
     running: bool,
 }
@@ -90,7 +90,7 @@ fn epoch_thread(state: Arc<Mutex<BackendState>>) {
         }
         for i in 0..127 {
             if lock.notes[i] > 0 {
-                lock.notes[i] = max(lock.notes[i] - EPOCH_DURATION as u32, 0);
+                lock.notes[i] = max(lock.notes[i] - EPOCH_DURATION as i32, 0);
                 if lock.notes[i] != 0 {
                     continue;
                 }
