@@ -1,6 +1,8 @@
-static FRONTV: &'static str = "EIY";
-static VARSON: &'static str = "CSPTG";
-static VOWELS_NO_Y: &'static str = "AEIOU";
+use phf;
+
+const FRONTV: &'static str = "EIY";
+const VARSON: &'static str = "CSPTG";
+const VOWELS_NO_Y: &'static str = "AEIOU";
 const MAX_LEN: usize = 10;
 
 pub fn is_vowel(local: &str, n: usize) -> bool {
@@ -8,6 +10,34 @@ pub fn is_vowel(local: &str, n: usize) -> bool {
         Some(v) => VOWELS_NO_Y.contains(v),
         None => false,
     }
+}
+
+static METAPHONE_LANGUAGE: phf::Map<char, u64> = phf_map!{
+    '0' => 1,
+    'B' => 2,
+    'F' => 3,
+    'H' => 4,
+    'J' => 5,
+    'K' => 6,
+    'L' => 7,
+    'M' => 8,
+    'N' => 9,
+    'P' => 10,
+    'R' => 11,
+    'S' => 12,
+    'T' => 13,
+    'W' => 14,
+    'X' => 15,
+    'Y' => 16,
+    'A' => 17,
+    'E' => 18,
+    'I' => 19,
+    'O' => 20,
+    'U' => 21,
+};
+
+pub fn to_note(c: char) -> Option<u64> {
+    METAPHONE_LANGUAGE.get(&c).cloned()
 }
 
 /// Try metaphone

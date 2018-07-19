@@ -11,6 +11,10 @@ path = "src/lib.rs"
 name = "linealyzer"
 path = "src/linealyzer/main.rs"
 
+[[bin]]
+name = "log2phonems"
+path = "src/linealyzer/log2phonems.rs"
+
 [dependencies]
 portaudio = "0.7.0"
 phf = "0.7.22"
