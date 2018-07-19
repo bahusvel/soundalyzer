@@ -11,6 +11,10 @@ path = "src/lib.rs"
 name = "linealyzer"
 path = "src/linealyzer/main.rs"
 
+[[bin]]
+name = "velocity_test"
+path = "test/velocity_test.rs"
+
 [dependencies]
 portaudio = "0.7.0"
 phf = "0.7.22"

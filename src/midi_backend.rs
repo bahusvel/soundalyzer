@@ -14,13 +14,11 @@ use super::Backend;
 
 const NOTE_ON_MSG: u8 = 0x90;
 const NOTE_OFF_MSG: u8 = 0x80;
-const VELOCITY: u8 = 127;
-const NOTE_DURATION: i32 = 50;
-const MAX_DURATION: i32 = NOTE_DURATION * 3;
-const EPOCH_DURATION: u64 = (NOTE_DURATION / 2) as u64;
+const VELOCITY_STEP: u8 = 40;
+const NOTE_DURATION: u64 = 50;
 
 struct BackendState {
-    notes: [i32; 127],
+    notes: [u8; 127],
     conn: Option<midir::MidiOutputConnection>,
     running: bool,
 }
@@ -33,10 +31,11 @@ impl Backend for MIDIBackend {
     fn play_note(&mut self, note: u64) {
         let mut lock = self.state.lock().unwrap();
         let note = 20 + (note % 107) as u8;
+        let nvel = min(lock.notes[note as usize] + VELOCITY_STEP, 127);
+        lock.notes[note as usize] = nvel;
         let _ = lock.conn.as_mut().unwrap().send(
-            &[NOTE_ON_MSG, note, VELOCITY],
+            &[NOTE_ON_MSG, note, nvel],
         );
-        lock.notes[note as usize] = min(lock.notes[note as usize] + NOTE_DURATION, MAX_DURATION);
     }
 }
 
@@ -49,7 +48,7 @@ impl Drop for MIDIBackend {
                 &[
                     NOTE_OFF_MSG,
                     i as u8,
-                    VELOCITY,
+                    127,
                 ],
             );
         }
@@ -90,14 +89,14 @@ impl MIDIBackend {
 
 fn epoch_thread(state: Arc<Mutex<BackendState>>) {
     loop {
-        sleep(Duration::from_millis(EPOCH_DURATION));
+        sleep(Duration::from_millis(NOTE_DURATION));
         let mut lock = state.lock().unwrap();
         if lock.running == false {
             return;
         }
         for i in 0..127 {
             if lock.notes[i] > 0 {
-                lock.notes[i] = max(lock.notes[i] - EPOCH_DURATION as i32, 0);
+                lock.notes[i] = 0;
                 if lock.notes[i] != 0 {
                     continue;
                 }
@@ -105,7 +104,7 @@ fn epoch_thread(state: Arc<Mutex<BackendState>>) {
                     &[
                         NOTE_OFF_MSG,
                         i as u8,
-                        VELOCITY,
+                        127,
                     ],
                 );
             }
