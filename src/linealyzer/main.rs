@@ -1,12 +1,16 @@
 #![feature(plugin)]
 #![plugin(phf_macros)]
 
+extern crate clap;
 extern crate phf;
-
 extern crate soundalyzer;
+
 mod syscallmap;
 
+use clap::{App, Arg};
+
 use soundalyzer::midi_backend::MIDIBackend;
+use soundalyzer::midi_sync::MIDISync;
 use soundalyzer::Backend;
 
 use std::error::Error;
@@ -16,7 +20,7 @@ use syscallmap::to_note;
 
 type line_to_note = fn(&str) -> u64;
 
-fn run() -> Result<(), Box<Error>> {
+fn syscall() -> Result<(), Box<Error>> {
     let mut backend = MIDIBackend::new()?;
     let input = stdin();
     for line in input.lock().lines() {
@@ -26,8 +30,53 @@ fn run() -> Result<(), Box<Error>> {
     Ok(())
 }
 
+fn phonetic() -> Result<(), Box<Error>> {
+    let mut backend = MIDISync::new()?;
+    let input = stdin();
+    for line in input.lock().lines() {
+        for c in line?.chars().filter(|c| c.is_ascii() && c.is_alphabetic()) {
+            // shift to 0
+            backend.play_note((c as u8 - 97) as u64)
+        }
+    }
+    Ok(())
+}
+
 fn main() {
-    match run() {
+    let matches = App::new("Soundalizer")
+        .version("0.0")
+        .author("Denis Lavrov <bahus.vel@gmail.com>")
+        .about("Transforms line buffered output to sounds")
+        .arg(
+            Arg::with_name("mode")
+                .short("m")
+                .long("mode")
+                .possible_values(&["syscall", "phonetic"])
+                .default_value("phonetic")
+                .help("Switches soundalizer to use a different algorithm")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("input")
+                .default_value("-")
+                .required(true)
+                .help("File like source to take the lines from"),
+        )
+        .arg(
+            Arg::with_name("output")
+                .default_value("-")
+                .required(false)
+                .help("File like destination to output compressed data"),
+        )
+        .get_matches();
+
+    let res = match matches.value_of("mode") {
+        Some("syscall") => syscall(),
+        Some("phonetic") => phonetic(),
+        Some(_) | None => panic!("Cannot be none"),
+    };
+
+    match res {
         Ok(_) => (),
         Err(err) => println!("Error: {}", err.description()),
     }

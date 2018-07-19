@@ -1,16 +1,16 @@
 extern crate midir;
 
+use std::borrow::Borrow;
+use std::cmp::{max, min};
+use std::error::Error;
+use std::io::{stdin, BufRead};
+use std::sync::{Arc, Mutex};
+use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
-use std::error::Error;
-use std::io::{BufRead, stdin};
-use std::borrow::Borrow;
-use std::sync::{Mutex, Arc};
-use std::thread;
-use std::cmp::{min, max};
 
-use midir::MidiOutput;
 use super::Backend;
+use midir::MidiOutput;
 
 const NOTE_ON_MSG: u8 = 0x90;
 const NOTE_OFF_MSG: u8 = 0x80;
@@ -30,12 +30,10 @@ pub struct MIDIBackend {
 impl Backend for MIDIBackend {
     fn play_note(&mut self, note: u64) {
         let mut lock = self.state.lock().unwrap();
-        let note = 20 + (note % 107) as u8;
+        let note = (20 + (note % 107)) as u8;
         let nvel = min(lock.notes[note as usize] + VELOCITY_STEP, 127);
         lock.notes[note as usize] = nvel;
-        let _ = lock.conn.as_mut().unwrap().send(
-            &[NOTE_ON_MSG, note, nvel],
-        );
+        let _ = lock.conn.as_mut().unwrap().send(&[NOTE_ON_MSG, note, nvel]);
     }
 }
 
@@ -44,13 +42,11 @@ impl Drop for MIDIBackend {
         let mut lock = self.state.lock().unwrap();
         lock.running = false;
         for i in 0..127 {
-            let _ = lock.conn.as_mut().unwrap().send(
-                &[
-                    NOTE_OFF_MSG,
-                    i as u8,
-                    127,
-                ],
-            );
+            let _ = lock
+                .conn
+                .as_mut()
+                .unwrap()
+                .send(&[NOTE_OFF_MSG, i as u8, 127]);
         }
     }
 }
@@ -80,7 +76,9 @@ impl MIDIBackend {
             running: true,
         }));
 
-        let backend = MIDIBackend { state: state.clone() };
+        let backend = MIDIBackend {
+            state: state.clone(),
+        };
         thread::spawn(move || epoch_thread(state));
 
         return Ok(backend);
@@ -100,13 +98,11 @@ fn epoch_thread(state: Arc<Mutex<BackendState>>) {
                 if lock.notes[i] != 0 {
                     continue;
                 }
-                let _ = lock.conn.as_mut().unwrap().send(
-                    &[
-                        NOTE_OFF_MSG,
-                        i as u8,
-                        127,
-                    ],
-                );
+                let _ = lock
+                    .conn
+                    .as_mut()
+                    .unwrap()
+                    .send(&[NOTE_OFF_MSG, i as u8, 127]);
             }
         }
         drop(lock);

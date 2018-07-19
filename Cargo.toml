@@ -11,10 +11,6 @@ path = "src/lib.rs"
 name = "linealyzer"
 path = "src/linealyzer/main.rs"
 
-[[bin]]
-name = "velocity_test"
-path = "test/velocity_test.rs"
-
 [dependencies]
 portaudio = "0.7.0"
 phf = "0.7.22"
@@ -23,6 +19,7 @@ lazy_static = "1.0.2"
 synth = "0.11.0"
 pitch_calc = "0.11.1"
 sample = "0.10.0"
+clap = "2.32.0"
 
 [dependencies.midir]
 version = "0.5.0"
