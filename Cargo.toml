@@ -7,14 +7,6 @@ authors = ["Denis Lavrov <bahus.vel@gmail.com>"]
 name = "soundalyzer"
 path = "src/lib.rs"
 
-[[bin]]
-name = "linealyzer"
-path = "src/linealyzer/main.rs"
-
-[[bin]]
-name = "log2phonems"
-path = "src/linealyzer/log2phonems.rs"
-
 [dependencies]
 portaudio = "0.7.0"
 phf = "0.7.22"
@@ -24,6 +16,7 @@ synth = "0.11.0"
 pitch_calc = "0.11.1"
 sample = "0.10.0"
 clap = "2.32.0"
+pcap = "0.7.0"
 
 [dependencies.midir]
 version = "0.5.0"
