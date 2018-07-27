@@ -13,12 +13,13 @@ use portaudio as pa;
 const CHANNELS: i32 = 1;
 const NUM_SECONDS: i32 = 5;
 const SAMPLE_RATE: f64 = 44_100.0;
-const FRAMES_PER_BUFFER: u32 = 64;
+const FRAMES_PER_BUFFER: u32 = 256;
 const USECS_PER_SAMPLE: u32 = (1_000_000.0 / SAMPLE_RATE) as u32;
+const DECAY: f32 = 2.0;
 
 type Buffer = [f32; FRAMES_PER_BUFFER as usize];
 
-const ZERO_BUFF: Buffer = [0.0; FRAMES_PER_BUFFER as usize];
+const ZERO_BUFF: Buffer = [-1.0; FRAMES_PER_BUFFER as usize];
 
 struct WriteBuffer {
     creation: Instant,
@@ -55,7 +56,13 @@ impl PortAudioBackend {
 
         let callback = move |pa::OutputStreamCallbackArgs { buffer, frames, .. }| {
             let mut buff = play_buffer.lock();
-            buffer.copy_from_slice(&buff.buff);
+
+            let mut carry = 0.0;
+            for i in 0..buffer.len() {
+                carry = (carry / DECAY) + buff.buff[i];
+                buffer[i] = carry;
+            }
+            //buffer.copy_from_slice(&buff.buff);
             buff.buff.copy_from_slice(&ZERO_BUFF);
             buff.creation = Instant::now();
             pa::Continue
