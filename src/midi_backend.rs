@@ -42,11 +42,9 @@ impl Drop for MIDIBackend {
         let mut lock = self.state.lock().unwrap();
         lock.running = false;
         for i in 0..127 {
-            let _ = lock
-                .conn
-                .as_mut()
-                .unwrap()
-                .send(&[NOTE_OFF_MSG, i as u8, 127]);
+            let _ = lock.conn.as_mut().unwrap().send(
+                &[NOTE_OFF_MSG, i as u8, 127],
+            );
         }
     }
 }
@@ -76,9 +74,7 @@ impl MIDIBackend {
             running: true,
         }));
 
-        let backend = MIDIBackend {
-            state: state.clone(),
-        };
+        let backend = MIDIBackend { state: state.clone() };
         thread::spawn(move || epoch_thread(state));
 
         return Ok(backend);
@@ -98,11 +94,9 @@ fn epoch_thread(state: Arc<Mutex<BackendState>>) {
                 if lock.notes[i] != 0 {
                     continue;
                 }
-                let _ = lock
-                    .conn
-                    .as_mut()
-                    .unwrap()
-                    .send(&[NOTE_OFF_MSG, i as u8, 127]);
+                let _ = lock.conn.as_mut().unwrap().send(
+                    &[NOTE_OFF_MSG, i as u8, 127],
+                );
             }
         }
         drop(lock);

@@ -11,6 +11,10 @@ use pcap::{Capture, Device};
 use std::error::Error;
 use std::io::{stdin, BufRead};
 
+use soundalyzer::portaudio_backend::PortAudioBackend;
+
+const MAX_PACKET_SIZE: f32 = 1514.0;
+
 fn main() {
     let matches = App::new("Netalyzer")
         .version("0.0")
@@ -36,10 +40,12 @@ fn main() {
 
     let packets: Result<(), Box<Error>> = {
         move || {
+            let mut backend = PortAudioBackend::new()?;
             let mut cap = Capture::from_device(Device {
                 name: iface.into(),
                 desc: None,
-            })?.promisc(true)
+            })?
+                .promisc(true)
                 .snaplen(0)
                 .open()?;
 
@@ -48,7 +54,8 @@ fn main() {
             }
 
             while let Ok(packet) = cap.next() {
-                println!("received packet! {:?}", packet);
+                backend.play_now(packet.header.len as f32 / MAX_PACKET_SIZE);
+                //println!("received packet! {:?}", packet);
             }
             Ok(())
         }
